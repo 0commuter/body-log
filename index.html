@@ -166,7 +166,10 @@ html,body{overflow-x:hidden;
   color:var(--ink);flex:1;min-width:0;
   -webkit-appearance:none;text-align:center;
   /* 防止 Safari 點擊時縮放 */
-  font-size:max(16px,32px);
+  font-size:16px;
+  transform:scale(2);
+  transform-origin:center;
+  width:50%;
 }
 .f-input::placeholder{color:var(--green-light);opacity:.6}
 /* 隱藏數字輸入框的原生上下箭頭 */

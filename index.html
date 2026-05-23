@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>BODY LOG</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Body Log">
+<meta name="theme-color" content="#4e6b52">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjNGU2YjUyIi8+PHRleHQgeT0iMTEwIiB4PSI5MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSI5MCI+8J+MtTwvdGV4dD48L3N2Zz4=">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Noto+Sans+TC:wght@300;400;500&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font-zh:'Noto Sans TC',sans-serif;
+  --font-en:'Cormorant Garamond',serif;
+  --font-num:'DM Serif Display',serif;
+  --font-sub:'Raleway',sans-serif;
+  --bg:#eef0ec;--warm:#f5f6f3;
+  --green:#7a9178;--green-deep:#4e6b52;--green-light:#b8cab5;--green-pale:#dde5db;
+  --ink:#2d3a2e;--muted:#6a7e6c;
+  --c1:#7a9178;--c2:#8fa888;--c3:#9aab88;--c4:#6a8a6a;--c5:#b8cab5;--c6:#4e6b52;--c7:#8a9e8c;
+  --top-h:56px;--bot-h:80px;
+  --safe-top:env(safe-area-inset-top);
+  --safe-bot:env(safe-area-inset-bottom);
+}
+html,body{
+  font-family:var(--font-zh)!important;
+  background:var(--bg);color:var(--ink);
+  height:100%;overflow:hidden;
+  background-image:
+    radial-gradient(ellipse at 20% 10%,rgba(122,145,120,.10) 0%,transparent 55%),
+    radial-gradient(ellipse at 80% 90%,rgba(78,107,82,.07) 0%,transparent 55%);
+}
+
+/* ── 頂部 ── */
+.top-bar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:calc(var(--top-h) + var(--safe-top));
+  padding-top:var(--safe-top);
+  background:var(--warm);
+  border-bottom:1px solid var(--green-pale);
+  display:flex;align-items:center;
+  padding-left:16px;padding-right:16px;gap:10px;
+}
+.api-dot{width:6px;height:6px;border-radius:50%;background:#bbb;flex-shrink:0;transition:background .3s}
+.top-bar.ok .api-dot{background:#6aaa6a}
+.top-bar.err .api-dot{background:#c07070}
+.top-bar.loading .api-dot{background:#c0a840;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.api-txt{font-family:var(--font-zh)!important;font-size:10px;color:var(--muted);
+  letter-spacing:1.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-time{font-family:var(--font-en)!important;font-size:15px;font-weight:300;
+  color:var(--green-deep);letter-spacing:.5px;white-space:nowrap;flex-shrink:0}
+.top-cfg{background:none;border:1px solid var(--green-pale);border-radius:2px;
+  color:var(--muted);font-family:var(--font-sub)!important;font-size:9px;
+  letter-spacing:1.5px;padding:5px 9px;cursor:pointer;flex-shrink:0;touch-action:manipulation}
+
+/* ── 設定面板 ── */
+.api-panel{
+  position:fixed;top:calc(var(--top-h) + var(--safe-top));left:0;right:0;
+  background:var(--warm);border-bottom:1px solid var(--green-pale);
+  padding:20px 16px;z-index:99;display:none;box-shadow:0 4px 20px rgba(0,0,0,.08)
+}
+.api-panel.open{display:block}
+.api-panel-title{font-family:var(--font-zh)!important;font-size:13px;font-weight:500;
+  color:var(--green-deep);letter-spacing:2px;margin-bottom:14px}
+.api-field{margin-bottom:12px}
+.api-field label{font-family:var(--font-zh)!important;font-size:11px;color:var(--muted);
+  display:block;margin-bottom:5px;letter-spacing:1px}
+.api-field input{width:100%;background:var(--bg);border:1px solid var(--green-pale);
+  border-radius:2px;padding:10px 12px;font-family:var(--font-sub)!important;font-size:16px;
+  color:var(--ink);outline:none;-webkit-appearance:none}
+.api-field input:focus{border-color:var(--green)}
+.api-hint{font-family:var(--font-sub)!important;font-size:10px;color:var(--green-light);margin-top:3px;line-height:1.5}
+.api-panel-btns{display:flex;gap:8px;margin-top:4px}
+.api-save-btn{flex:1;padding:12px;background:var(--green-deep);color:#e8ede8;border:none;
+  border-radius:2px;font-family:var(--font-zh)!important;font-size:12px;letter-spacing:3px;cursor:pointer}
+.api-cancel-btn{padding:12px 16px;background:transparent;color:var(--muted);
+  border:1px solid var(--green-pale);border-radius:2px;
+  font-family:var(--font-zh)!important;font-size:12px;letter-spacing:2px;cursor:pointer}
+
+/* ── 主內容 ── */
+.main{
+  position:fixed;
+  top:calc(var(--top-h) + var(--safe-top));
+  bottom:calc(var(--bot-h) + var(--safe-bot));
+  left:0;right:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.main-inner{max-width:680px;margin:0 auto;padding:10px 10px 8px}
+.sec{display:none}.sec.active{display:block}
+
+/* ── 補登 ── */
+.backfill-row{display:flex;align-items:center;gap:12px;
+  padding:10px 14px;background:var(--warm);
+  border:1px solid var(--green-pale);border-radius:3px 3px 0 0}
+.backfill-row.active{background:rgba(184,202,181,.2)}
+.bf-label{font-family:var(--font-zh)!important;font-size:11px;color:var(--muted);letter-spacing:2px;flex:1}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:var(--green-pale);border-radius:22px;cursor:pointer;transition:.25s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;
+  left:3px;top:3px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle input:checked+.toggle-slider{background:var(--green)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+.backfill-date-row{display:none;align-items:center;gap:10px;
+  padding:10px 14px;background:rgba(184,202,181,.12);
+  border:1px solid var(--green-pale);border-top:none}
+.backfill-date-row.show{display:flex}
+.bf-date-label{font-family:var(--font-zh)!important;font-size:11px;color:var(--muted);letter-spacing:2px;white-space:nowrap}
+.bf-date-input{flex:1;background:var(--bg);border:1px solid var(--green-light);
+  border-radius:2px;padding:8px 10px;font-family:var(--font-sub)!important;
+  font-size:16px;color:var(--ink);outline:none;-webkit-appearance:none;min-width:0}
+.bf-badge{font-family:var(--font-sub)!important;font-size:9px;letter-spacing:1.5px;
+  color:#fff;background:var(--green);padding:2px 7px;border-radius:10px;text-transform:uppercase}
+
+/* ── 輸入格 ── */
+.fields-grid{
+  display:flex;flex-direction:column;
+  background:var(--warm);border:1px solid var(--green-pale);border-top:none;
+  border-radius:0 0 3px 3px;
+}
+.f-cell{
+  min-height:74px;
+  padding:0 14px 0 16px;
+  border-bottom:1px solid var(--green-pale);
+  position:relative;
+  display:flex;align-items:center;gap:10px;
+}
+.f-cell.last-row{border-bottom:none}
+.f-cell.full{border-bottom:none}
+.f-cell::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:3px;
+  border-radius:0 2px 2px 0;background:var(--cell-color,var(--green-light));opacity:.8}
+.f-cell:nth-child(1){--cell-color:var(--c1)}
+.f-cell:nth-child(2){--cell-color:var(--c2)}
+.f-cell:nth-child(3){--cell-color:var(--c3)}
+.f-cell:nth-child(4){--cell-color:var(--c4)}
+.f-cell:nth-child(5){--cell-color:var(--c5)}
+.f-cell:nth-child(6){--cell-color:var(--c6)}
+.f-cell:nth-child(7){--cell-color:var(--c7)}
+
+/* 標籤：佔左側固定寬度 */
+.f-label{display:flex;flex-direction:column;gap:2px;width:80px;flex-shrink:0}
+.f-label-zh{font-family:var(--font-zh)!important;font-weight:500;font-size:13px;color:var(--ink);letter-spacing:1px}
+.f-label-unit{font-family:var(--font-sub)!important;font-weight:400;font-size:10px;
+  letter-spacing:1.5px;color:var(--green);text-transform:uppercase}
+.f-label-en{display:none}
+
+/* 數字 + 按鈕：填滿剩餘空間 */
+.f-input-row{display:flex;align-items:center;flex:1;gap:0}
+.f-btn{
+  width:44px;height:54px;flex-shrink:0;
+  border-radius:8px;
+  border:1.5px solid var(--green-pale);background:transparent;
+  color:var(--green-deep);font-size:22px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;user-select:none;touch-action:manipulation;
+}
+.f-btn:active{background:var(--green-pale)}
+.f-input{
+  background:transparent;border:none;outline:none;
+  font-family:var(--font-num)!important;font-weight:400;
+  font-size:32px;
+  color:var(--ink);flex:1;min-width:0;
+  -webkit-appearance:none;text-align:center;
+  /* 防止 Safari 點擊時縮放 */
+  font-size:max(16px,32px);
+}
+.f-input::placeholder{color:var(--green-light);opacity:.6}
+/* 隱藏數字輸入框的原生上下箭頭 */
+.f-input::-webkit-inner-spin-button,
+.f-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.f-input[type=number]{-moz-appearance:textfield}
+
+/* ── 儲存按鈕 ── */
+.save-btn{width:100%;padding:16px;background:var(--green-deep);color:#e8ede8;border:none;
+  border-radius:3px;font-family:var(--font-zh)!important;font-size:13px;
+  letter-spacing:6px;cursor:pointer;margin-top:10px;position:relative;touch-action:manipulation}
+.save-btn:active{opacity:.85}
+.save-btn:disabled{opacity:.6;cursor:not-allowed}
+.save-spinner{display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;
+  position:absolute;right:20px;top:50%;transform:translateY(-50%)}
+@keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
+.save-btn.loading .save-spinner{display:block}
+
+/* ── 圖表 ── */
+.chart-sec{padding:4px 0}
+.metric-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.m-btn{font-family:var(--font-zh)!important;font-size:11px;letter-spacing:1px;
+  padding:6px 13px;border-radius:20px;border:1px solid var(--green-light);
+  background:transparent;color:var(--green-deep);cursor:pointer;touch-action:manipulation}
+.m-btn.active{background:var(--green-deep);color:#e8ede8;border-color:var(--green-deep)}
+.chart-box{background:var(--warm);border:1px solid var(--green-pale);border-radius:3px;padding:14px 12px 10px}
+.chart-head{display:flex;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap}
+.chart-title-bar{display:flex;align-items:center;gap:8px}
+.chart-title-dot{width:3px;height:16px;border-radius:2px;background:var(--green);flex-shrink:0}
+.chart-ttl{font-family:var(--font-zh)!important;font-weight:500;font-size:14px;color:var(--green-deep);letter-spacing:1px}
+.rng-row{display:flex;gap:5px;margin-left:auto}
+.rng-btn{font-family:var(--font-zh)!important;font-size:10px;letter-spacing:1px;
+  padding:4px 10px;border:1px solid var(--green-light);background:transparent;
+  color:var(--green);border-radius:2px;cursor:pointer;touch-action:manipulation}
+.rng-btn.active{background:var(--green);color:var(--warm);border-color:var(--green)}
+.chart-wrap{position:relative;height:200px}
+canvas{width:100%!important}
+
+/* ── 歷史 ── */
+.hist-list{display:flex;flex-direction:column;gap:8px}
+.h-item{background:var(--warm);border:1px solid var(--green-pale);border-radius:3px;
+  padding:12px 12px 12px 16px;display:grid;grid-template-columns:auto 1fr auto;
+  align-items:start;gap:10px;position:relative}
+.h-item::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;
+  border-radius:0 2px 2px 0;background:var(--green-light);opacity:.7}
+.h-date{font-family:var(--font-en)!important;font-size:13px;color:var(--muted);white-space:nowrap;line-height:1.7}
+.h-metrics{display:flex;flex-wrap:wrap;gap:5px 12px}
+.h-m{display:flex;flex-direction:column}
+.h-ml{font-family:var(--font-sub)!important;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.h-mv{font-family:var(--font-en)!important;font-size:17px;color:var(--ink)}
+.del-btn{background:none;border:none;color:var(--green-light);cursor:pointer;
+  font-size:14px;padding:6px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.del-btn:active{color:#a05050}
+.empty{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty-icon{font-size:28px;margin-bottom:12px;opacity:.5}
+.empty p{font-family:var(--font-zh)!important;font-weight:300;font-size:13px;letter-spacing:2px;line-height:2.2}
+
+/* ── 底部導覽 ── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  height:calc(var(--bot-h) + var(--safe-bot));
+  padding-bottom:var(--safe-bot);
+  background:var(--warm);
+  border-top:1px solid var(--green-pale);
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;padding-top:6px;
+}
+.bot-brand{font-family:var(--font-en)!important;font-style:italic;font-weight:300;
+  font-size:13px;color:var(--green-light);letter-spacing:3px;margin-bottom:3px}
+.bot-tabs{display:flex;width:100%;max-width:680px}
+.bot-tab{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:5px 4px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  border-top:2px solid transparent;transition:all .2s}
+.bot-tab.active{border-top-color:var(--green)}
+.bot-tab-icon{font-size:17px;opacity:.4;transition:opacity .2s}
+.bot-tab.active .bot-tab-icon{opacity:.85}
+.bot-tab-label{font-family:var(--font-zh)!important;font-size:10px;letter-spacing:2px;
+  color:var(--muted);transition:color .2s}
+.bot-tab.active .bot-tab-label{color:var(--green-deep)}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:calc(var(--bot-h) + var(--safe-bot) + 12px);left:50%;
+  transform:translateX(-50%) translateY(10px);
+  background:var(--green-deep);color:#e8ede8;
+  font-family:var(--font-zh)!important;font-size:12px;letter-spacing:3px;
+  padding:10px 24px;border-radius:2px;opacity:0;transition:all .3s;
+  pointer-events:none;white-space:nowrap;z-index:200;
+  box-shadow:0 2px 16px rgba(0,0,0,.15)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:#7a3030}
+</style>
+</head>
+<body>
+
+<!-- 頂部狀態列 -->
+<div class="top-bar loading" id="top-bar">
+  <div class="api-dot"></div>
+  <span class="api-txt" id="api-txt">尚未設定</span>
+  <span class="top-time" id="ts">—</span>
+  <button class="top-cfg" onclick="togglePanel()">設 定</button>
+</div>
+
+<!-- 設定面板 -->
+<div class="api-panel" id="api-panel">
+  <div class="api-panel-title">連線設定</div>
+  <div class="api-field">
+    <label>Google Apps Script 網址</label>
+    <input type="url" id="inp-url" placeholder="https://script.google.com/macros/s/…/exec"
+      autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="api-hint">部署 Web App 後取得的 /exec 結尾網址</div>
+  </div>
+  <div class="api-field">
+    <label>存取 Token</label>
+    <input type="text" id="inp-token" placeholder="執行 getToken() 後複製貼上"
+      autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="api-hint">在 Apps Script 執行 getToken() 後複製貼上</div>
+  </div>
+  <div class="api-panel-btns">
+    <button class="api-save-btn" onclick="saveSettings()">儲 存</button>
+    <button class="api-cancel-btn" onclick="togglePanel()">取 消</button>
+  </div>
+</div>
+
+<!-- 主內容 -->
+<div class="main">
+  <div class="main-inner">
+
+    <!-- 記錄 -->
+    <div class="sec active" id="sec-input">
+      <div class="backfill-row" id="bf-row">
+        <span class="bf-label">補登過去的資料</span>
+        <label class="toggle">
+          <input type="checkbox" id="bf-toggle" onchange="toggleBackfill()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="backfill-date-row" id="bf-date-row">
+        <span class="bf-date-label">補登日期</span>
+        <input type="date" class="bf-date-input" id="bf-date">
+        <span class="bf-badge">backfill</span>
+      </div>
+
+      <div class="fields-grid">
+        <div class="f-cell">
+          <div class="f-label"><span class="f-label-zh">體重</span><span class="f-label-unit">kg</span><span class="f-label-en">Weight</span></div>
+          <div class="f-input-row">
+            <button class="f-btn" id="btn-weight-m">−</button>
+            <input class="f-input" id="f-weight" type="number" step="0.1" inputmode="decimal" placeholder="—">
+            <button class="f-btn" id="btn-weight-p">+</button>
+          </div>
+        </div>
+        <div class="f-cell">
+          <div class="f-label"><span class="f-label-zh">體脂率</span><span class="f-label-unit">%</span><span class="f-label-en">Body Fat</span></div>
+          <div class="f-input-row">
+            <button class="f-btn" id="btn-fat-m">−</button>
+            <input class="f-input" id="f-fat" type="number" step="0.1" inputmode="decimal" placeholder="—">
+            <button class="f-btn" id="btn-fat-p">+</button>
+          </div>
+        </div>
+        <div class="f-cell">
+          <div class="f-label"><span class="f-label-zh">內臟脂肪</span><span class="f-label-unit">lv</span><span class="f-label-en">Visceral</span></div>
+          <div class="f-input-row">
+            <button class="f-btn" id="btn-visceral-m">−</button>
+            <input class="f-input" id="f-visceral" type="number" step="1" inputmode="numeric" placeholder="—">
+            <button class="f-btn" id="btn-visceral-p">+</button>
+          </div>
+        </div>
+        <div class="f-cell">
+          <div class="f-label"><span class="f-label-zh">骨骼肌率</span><span class="f-label-unit">%</span><span class="f-label-en">Muscle</span></div>
+          <div class="f-input-row">
+            <button class="f-btn" id="btn-muscle-m">−</button>
+            <input class="f-input" id="f-muscle" type="number" step="0.1" inputmode="decimal" placeholder="—">
+            <button class="f-btn" id="btn-muscle-p">+</button>
+          </div>
+        </div>
+        <div class="f-cell last-row">
+          <div class="f-label"><span class="f-label-zh">體年齡</span><span class="f-label-unit">歲</span><span class="f-label-en">Body Age</span></div>
+          <div class="f-input-row">
+            <button class="f-btn" id="btn-age-m">−</button>
+            <input class="f-input" id="f-age" type="number" step="1" inputmode="numeric" placeholder="—">
+            <button class="f-btn" id="btn-age-p">+</button>
+          </div>
+        </div>
+        <div class="f-cell last-row">
+          <div class="f-label"><span class="f-label-zh">基礎代謝</span><span class="f-label-unit">kcal</span><span class="f-label-en">BMR</span></div>
+          <div class="f-input-row">
+            <button class="f-btn" id="btn-bmr-m">−</button>
+            <input class="f-input" id="f-bmr" type="number" step="10" inputmode="numeric" placeholder="—">
+            <button class="f-btn" id="btn-bmr-p">+</button>
+          </div>
+        </div>
+        <div class="f-cell full">
+          <div class="f-label"><span class="f-label-zh">BMI</span><span class="f-label-unit" id="bmi-lbl" style="color:var(--green-light);font-size:9px">自動計算</span><span class="f-label-en">Body Mass Index</span></div>
+          <div class="f-input-row">
+            <button class="f-btn" id="btn-bmi-m">−</button>
+            <input class="f-input" id="f-bmi" type="number" step="0.1" inputmode="decimal" placeholder="—">
+            <button class="f-btn" id="btn-bmi-p">+</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="save-btn" id="save-btn" onclick="save()">
+        儲 存 記 錄
+        <span class="save-spinner"></span>
+      </button>
+    </div>
+
+    <!-- 圖表 -->
+    <div class="sec" id="sec-chart">
+      <div class="chart-sec">
+        <div class="metric-row">
+          <button class="m-btn active" onclick="setM(this,'weight')">體重</button>
+          <button class="m-btn" onclick="setM(this,'fat')">體脂率</button>
+          <button class="m-btn" onclick="setM(this,'visceral')">內臟脂肪</button>
+          <button class="m-btn" onclick="setM(this,'muscle')">骨骼肌率</button>
+          <button class="m-btn" onclick="setM(this,'bmr')">基礎代謝</button>
+          <button class="m-btn" onclick="setM(this,'bmi')">BMI</button>
+          <button class="m-btn" onclick="setM(this,'bodyAge')">體年齡</button>
+        </div>
+        <div class="chart-box">
+          <div class="chart-head">
+            <div class="chart-title-bar">
+              <div class="chart-title-dot" id="cdot"></div>
+              <span class="chart-ttl" id="ctitle">體重趨勢</span>
+            </div>
+            <div class="rng-row">
+              <button class="rng-btn active" onclick="setR(this,7)">7 天</button>
+              <button class="rng-btn" onclick="setR(this,30)">30 天</button>
+              <button class="rng-btn" onclick="setR(this,0)">全部</button>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="myChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 歷史 -->
+    <div class="sec" id="sec-hist">
+      <div class="hist-list" id="hist-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 底部導覽 -->
+<div class="bottom-nav">
+  <div class="bot-brand">BODY LOG</div>
+  <div class="bot-tabs">
+    <div class="bot-tab active" id="tab-input" onclick="go('input')">
+      <span class="bot-tab-icon">📋</span>
+      <span class="bot-tab-label">記 錄</span>
+    </div>
+    <div class="bot-tab" id="tab-chart" onclick="go('chart')">
+      <span class="bot-tab-icon">📈</span>
+      <span class="bot-tab-label">圖 表</span>
+    </div>
+    <div class="bot-tab" id="tab-hist" onclick="go('hist')">
+      <span class="bot-tab-icon">🗂</span>
+      <span class="bot-tab-label">歷 史</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const K_URL='bl-gas-url',K_TOKEN='bl-gas-token',K_RECS='bl-recs';
+let GAS_URL=localStorage.getItem(K_URL)||'';
+let GAS_TOKEN=localStorage.getItem(K_TOKEN)||'';
+let recs=JSON.parse(localStorage.getItem(K_RECS)||'[]');
+let chart=null,cm='weight',cr=7;
+
+const DEFAULTS={weight:46,fat:25,visceral:2,muscle:30,age:30,bmr:1090};
+
+function fillDefaults(){
+  Object.entries(DEFAULTS).forEach(([k,v])=>{ document.getElementById('f-'+k).value=v; });
+  calcBmi();
+}
+
+// BMI 自動計算（需在 localStorage 設 'bl-height' 單位 cm）
+function calcBmi(){
+  const h=parseFloat(localStorage.getItem('bl-height')||'0');
+  const w=parseFloat(document.getElementById('f-weight').value||'0');
+  if(h>0&&w>0){
+    document.getElementById('f-bmi').value=(w/((h/100)**2)).toFixed(1);
+    document.getElementById('bmi-lbl').textContent='自動計算';
+  }
+}
+document.getElementById('f-weight').addEventListener('input',calcBmi);
+
+// 時鐘
+const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmt(d){
+  return `${String(d.getDate()).padStart(2,'0')} ${MO[d.getMonth()]}  ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+setInterval(()=>{document.getElementById('ts').textContent=fmt(new Date());},1000);
+document.getElementById('ts').textContent=fmt(new Date());
+
+// +/- 按鈕 + 長按連續
+function adj(id,delta){
+  const el=document.getElementById(id);
+  const val=parseFloat(el.value)||0;
+  const dec=Math.abs(delta)<1?1:0;
+  const next=val+delta;
+  el.value=next<0?'0':next.toFixed(dec);
+  if(id==='f-weight') calcBmi();
+}
+function setupBtn(mId,pId,fId,delta){
+  let timer=null,iv=null;
+  function start(d){
+    adj(fId,d);
+    timer=setTimeout(()=>{iv=setInterval(()=>adj(fId,d),80);},400);
+  }
+  function stop(){clearTimeout(timer);clearInterval(iv);timer=null;iv=null;}
+  const mb=document.getElementById(mId),pb=document.getElementById(pId);
+  mb.addEventListener('pointerdown',e=>{e.preventDefault();document.activeElement.blur();start(-delta);});
+  mb.addEventListener('pointerup',stop);mb.addEventListener('pointerleave',stop);mb.addEventListener('pointercancel',stop);
+  pb.addEventListener('pointerdown',e=>{e.preventDefault();document.activeElement.blur();start(delta);});
+  pb.addEventListener('pointerup',stop);pb.addEventListener('pointerleave',stop);pb.addEventListener('pointercancel',stop);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  setupBtn('btn-weight-m','btn-weight-p','f-weight',0.1);
+  setupBtn('btn-fat-m','btn-fat-p','f-fat',0.1);
+  setupBtn('btn-visceral-m','btn-visceral-p','f-visceral',1);
+  setupBtn('btn-muscle-m','btn-muscle-p','f-muscle',0.1);
+  setupBtn('btn-age-m','btn-age-p','f-age',1);
+  setupBtn('btn-bmr-m','btn-bmr-p','f-bmr',10);
+  setupBtn('btn-bmi-m','btn-bmi-p','f-bmi',0.1);
+  fillDefaults();
+  checkApi();
+});
+
+// 設定面板
+function togglePanel(){
+  const p=document.getElementById('api-panel');
+  if(p.classList.toggle('open')){
+    document.getElementById('inp-url').value=GAS_URL;
+    document.getElementById('inp-token').value=GAS_TOKEN;
+  }
+}
+function saveSettings(){
+  const url=document.getElementById('inp-url').value.trim();
+  const token=document.getElementById('inp-token').value.trim();
+  if(!url||!token){toast('請填入網址和 Token',true);return;}
+  GAS_URL=url;GAS_TOKEN=token;
+  localStorage.setItem(K_URL,url);localStorage.setItem(K_TOKEN,token);
+  document.getElementById('api-panel').classList.remove('open');
+  checkApi();
+}
+
+// API
+function updateBar(state,msg){
+  document.getElementById('top-bar').className='top-bar '+state;
+  document.getElementById('api-txt').textContent=msg;
+}
+async function checkApi(){
+  if(!GAS_URL||!GAS_TOKEN){updateBar('err','尚未設定 — 點「設 定」');return;}
+  updateBar('loading','連線中…');
+  try{
+    const res=await fetch(`${GAS_URL}?token=${encodeURIComponent(GAS_TOKEN)}`,{redirect:'follow'});
+    const data=await res.json();
+    if(data.error) throw new Error(data.error);
+    recs=data.records||[];
+    localStorage.setItem(K_RECS,JSON.stringify(recs));
+    updateBar('ok',`已連線 · ${recs.length} 筆`);
+  }catch(e){updateBar('err','連線失敗 — 請確認設定');}
+}
+async function gasPost(payload){
+  if(!GAS_URL||!GAS_TOKEN) throw new Error('未設定連線');
+  const res=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({...payload,token:GAS_TOKEN}),redirect:'follow'});
+  const data=await res.json();
+  if(data.error) throw new Error(data.error);
+  return data;
+}
+
+// 頁面切換
+function go(n){
+  ['input','chart','hist'].forEach(s=>{
+    document.getElementById('sec-'+s).classList.toggle('active',s===n);
+    document.getElementById('tab-'+s).classList.toggle('active',s===n);
+  });
+  if(n==='chart') drawChart();
+  if(n==='hist')  drawHist();
+}
+
+// 補登
+function toggleBackfill(){
+  const on=document.getElementById('bf-toggle').checked;
+  document.getElementById('bf-date-row').classList.toggle('show',on);
+  document.getElementById('bf-row').classList.toggle('active',on);
+  if(on){
+    const t=new Date();
+    document.getElementById('bf-date').value=
+      `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  }
+}
+
+// 儲存
+async function save(){
+  const isBackfill=document.getElementById('bf-toggle').checked;
+  let ts;
+  if(isBackfill){
+    const dv=document.getElementById('bf-date').value;
+    if(!dv){toast('請選擇補登日期',true);return;}
+    ts=new Date(dv+'T00:00:00').toISOString();
+  } else {ts=new Date().toISOString();}
+
+  const r={ts,
+    weight:  +document.getElementById('f-weight').value  ||null,
+    fat:     +document.getElementById('f-fat').value     ||null,
+    visceral:+document.getElementById('f-visceral').value||null,
+    muscle:  +document.getElementById('f-muscle').value  ||null,
+    bodyAge: +document.getElementById('f-age').value     ||null,
+    bmr:     +document.getElementById('f-bmr').value     ||null,
+    bmi:     +document.getElementById('f-bmi').value     ||null,
+  };
+  if(Object.values(r).slice(1).every(v=>!v)){toast('請至少填入一個數值',true);return;}
+
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true;btn.classList.add('loading');
+  btn.childNodes[0].textContent='儲 存 中…';
+  try{
+    if(GAS_URL&&GAS_TOKEN){
+      await gasPost(r);
+      isBackfill?(recs.push(r),recs.sort((a,b)=>new Date(b.ts)-new Date(a.ts))):recs.unshift(r);
+      localStorage.setItem(K_RECS,JSON.stringify(recs));
+      updateBar('ok',`已連線 · ${recs.length} 筆`);
+      toast(isBackfill?'補登完成 ✦':'已儲存 ✦');
+    } else {
+      isBackfill?(recs.push(r),recs.sort((a,b)=>new Date(b.ts)-new Date(a.ts))):recs.unshift(r);
+      localStorage.setItem(K_RECS,JSON.stringify(recs));
+      toast(isBackfill?'補登完成（本機）':'已儲存（本機）');
+    }
+    fillDefaults();
+    if(isBackfill){document.getElementById('bf-toggle').checked=false;toggleBackfill();}
+  }catch(e){toast('儲存失敗：'+e.message,true);}
+  finally{
+    btn.disabled=false;btn.classList.remove('loading');
+    btn.childNodes[0].textContent='儲 存 記 錄';
+  }
+}
+
+// 刪除
+async function del(i){
+  if(!confirm('確定要刪除？')) return;
+  const r=recs[i];
+  try{
+    if(GAS_URL&&GAS_TOKEN) await gasPost({action:'delete',ts:r.ts});
+    recs.splice(i,1);
+    localStorage.setItem(K_RECS,JSON.stringify(recs));
+    updateBar('ok',`已連線 · ${recs.length} 筆`);
+    drawHist();toast('已刪除');
+  }catch(e){toast('刪除失敗：'+e.message,true);}
+}
+
+// 圖表
+const MC={
+  weight:{label:'體重趨勢',unit:'kg',color:'#7a9178',name:'體重'},
+  fat:{label:'體脂率趨勢',unit:'%',color:'#9aab88',name:'體脂率'},
+  visceral:{label:'內臟脂肪趨勢',unit:'',color:'#6a8070',name:'內臟脂肪'},
+  muscle:{label:'骨骼肌率趨勢',unit:'%',color:'#4e6b52',name:'骨骼肌率'},
+  bmr:{label:'基礎代謝趨勢',unit:'kcal',color:'#8a9e8c',name:'基礎代謝'},
+  bmi:{label:'BMI 趨勢',unit:'',color:'#7a9080',name:'BMI'},
+  bodyAge:{label:'體年齡趨勢',unit:'歲',color:'#6a8868',name:'體年齡'},
+};
+function setM(el,m){
+  document.querySelectorAll('.m-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');cm=m;drawChart();
+}
+function setR(el,d){
+  document.querySelectorAll('.rng-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');cr=d;drawChart();
+}
+function drawChart(){
+  const cfg=MC[cm];
+  document.getElementById('ctitle').textContent=cfg.label;
+  document.getElementById('cdot').style.background=cfg.color;
+  let data=[...recs].reverse();
+  if(cr>0){const c=new Date();c.setDate(c.getDate()-cr);data=data.filter(r=>new Date(r.ts)>=c);}
+  if(chart) chart.destroy();
+  const ctx=document.getElementById('myChart').getContext('2d');
+  chart=new Chart(ctx,{type:'line',
+    data:{
+      labels:data.map(r=>{const d=new Date(r.ts);return (d.getMonth()+1)+'/'+d.getDate();}),
+      datasets:[{label:cfg.name,data:data.map(r=>r[cm]),
+        borderColor:cfg.color,backgroundColor:cfg.color+'20',
+        pointBackgroundColor:cfg.color,pointRadius:4,pointHoverRadius:6,
+        borderWidth:2,tension:.4,fill:true,spanGaps:true}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#2d3a2e',
+          titleFont:{family:'Noto Sans TC',size:11},
+          bodyFont:{family:'DM Serif Display',size:16},
+          padding:10,callbacks:{label:c=>` ${c.parsed.y} ${cfg.unit}`}}},
+      scales:{
+        x:{grid:{color:'rgba(122,145,120,.12)'},ticks:{color:'#8a9e8c',font:{size:10}}},
+        y:{grid:{color:'rgba(122,145,120,.12)'},ticks:{color:'#8a9e8c',font:{size:10}}}
+      }
+    }
+  });
+}
+
+// 歷史
+function drawHist(){
+  const list=document.getElementById('hist-list');
+  if(!recs.length){
+    list.innerHTML=`<div class="empty"><div class="empty-icon">🌿</div><p>還沒有任何記錄<br>快來量第一筆吧</p></div>`;
+    return;
+  }
+  list.innerHTML=recs.map((r,i)=>{
+    const d=new Date(r.ts);
+    const ms=[
+      {k:'weight',l:'體重',u:'kg'},{k:'fat',l:'體脂',u:'%'},
+      {k:'visceral',l:'內臟脂',u:''},{k:'muscle',l:'骨骼肌',u:'%'},
+      {k:'bodyAge',l:'體年齡',u:'歲'},{k:'bmr',l:'代謝',u:'kcal'},{k:'bmi',l:'BMI',u:''}
+    ].filter(m=>r[m.k]!=null&&r[m.k]!=='');
+    return `<div class="h-item">
+      <div class="h-date">${fmt(d)}</div>
+      <div class="h-metrics">${ms.map(m=>`<div class="h-m"><span class="h-ml">${m.l}</span><span class="h-mv">${r[m.k]}${m.u}</span></div>`).join('')}</div>
+      <button class="del-btn" onclick="del(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// Toast
+function toast(msg,isErr=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.toggle('err',isErr);
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);
+}
+</script>
+</body>
+</html>

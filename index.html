@@ -401,6 +401,24 @@ canvas{width:100%!important}
         </div>
         <div class="chart-box">
           <div class="chart-head">
+            <div class="chart-box">
+          <div class="chart-head">
+            <div class="chart-title-bar">
+              <div class="chart-title-dot" id="cdot"></div>
+              <span class="chart-ttl" id="ctitle">體重趨勢</span>
+            </div>
+            <div class="rng-row">
+              <button class="rng-btn active" onclick="setR(this,7)">7 天</button>
+              <button class="rng-btn" onclick="setR(this,30)">30 天</button>
+              <button class="rng-btn" onclick="setR(this,0)">全部</button>
+            </div>
+          </div>
+          
+          <!-- 👇 請在這裡新增這行，樣式我都幫你配好草綠色了 👇 -->
+          <div id="cremark" style="font-size: 11px; color: var(--green); margin-bottom: 10px; letter-spacing: 1px; min-height: 16px;"></div>
+
+          <div class="chart-wrap"><canvas id="myChart"></canvas></div>
+        </div>
             <div class="chart-title-bar">
               <div class="chart-title-dot" id="cdot"></div>
               <span class="chart-ttl" id="ctitle">體重趨勢</span>
@@ -682,13 +700,13 @@ async function del(i){
 
 // 圖表
 const MC={
-  weight:{label:'體重趨勢',unit:'kg',color:'#7a9178',name:'體重'},
-  fat:{label:'體脂率趨勢',unit:'%',color:'#9aab88',name:'體脂率'},
-  visceral:{label:'內臟脂肪趨勢',unit:'',color:'#6a8070',name:'內臟脂肪'},
-  muscle:{label:'骨骼肌率趨勢',unit:'%',color:'#4e6b52',name:'骨骼肌率'},
-  bmr:{label:'基礎代謝趨勢',unit:'kcal',color:'#8a9e8c',name:'基礎代謝'},
-  bmi:{label:'BMI 趨勢',unit:'',color:'#7a9080',name:'BMI'},
-  bodyAge:{label:'體年齡趨勢',unit:'歲',color:'#6a8868',name:'體年齡'},
+  weight:{label:'體重趨勢',unit:'kg',color:'#7a9178',name:'體重', remark:''},
+  fat:{label:'體脂率趨勢',unit:'%',color:'#9aab88',name:'體脂率', remark:''},
+  visceral:{label:'內臟脂肪趨勢',unit:'',color:'#6a8070',name:'內臟脂肪', remark:'💡 越低越好'},
+  muscle:{label:'骨骼肌率趨勢',unit:'%',color:'#4e6b52',name:'骨骼肌率', remark:'💡 越高越好'},
+  bmr:{label:'基礎代謝趨勢',unit:'kcal',color:'#8a9e8c',name:'基礎代謝', remark:'💡 越高越好'},
+  bmi:{label:'BMI 趨勢',unit:'',color:'#7a9080',name:'BMI', remark:''},
+  bodyAge:{label:'體年齡趨勢',unit:'歲',color:'#6a8868',name:'體年齡', remark:''},
 };
 function setM(el,m){
   document.querySelectorAll('.m-btn').forEach(b=>b.classList.remove('active'));
@@ -702,6 +720,10 @@ function drawChart(){
   const cfg=MC[cm];
   document.getElementById('ctitle').textContent=cfg.label;
   document.getElementById('cdot').style.background=cfg.color;
+
+  // 👇 新增這行：將對應的備註顯示在畫面上 👇
+  document.getElementById('cremark').textContent=cfg.remark;
+  
   let data=[...recs].reverse();
   if(cr>0){const c=new Date();c.setDate(c.getDate()-cr);data=data.filter(r=>new Date(r.ts)>=c);}
   if(chart) chart.destroy();

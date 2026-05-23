@@ -148,28 +148,30 @@ html,body{overflow-x:hidden;
   letter-spacing:1.5px;color:var(--green);text-transform:uppercase}
 .f-label-en{display:none}
 
-/* 數字 + 按鈕：填滿剩餘空間 */
-.f-input-row{display:flex;align-items:center;flex:1;gap:0}
+/* 數字 + 按鈕 */
+.f-input-row{display:flex;align-items:center;flex:1;gap:8px}
 .f-btn{
-  width:44px;height:54px;flex-shrink:0;
+  width:56px;height:54px;flex-shrink:0; /* 加寬確保手指盲點不會漏接 */
   border-radius:8px;
   border:1.5px solid var(--green-pale);background:transparent;
   color:var(--green-deep);font-size:22px;line-height:1;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
-  -webkit-tap-highlight-color:transparent;user-select:none;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  user-select:none;
+  touch-action:none; /* 關鍵：完全阻斷瀏覽器的雙擊縮放與多餘判定，讓按鈕變為純粹的控制器 */
 }
 .f-btn:active{background:var(--green-pale)}
+
 .f-input{
+  margin:0;padding:0;
   background:transparent;border:none;outline:none;
   font-family:var(--font-num)!important;font-weight:400;
-  font-size:32px;
+  font-size:32px; /* 丟棄 scale 縮放，直接使用大字體，iOS 不會放大且熱區100%精準 */
   color:var(--ink);flex:1;min-width:0;
   -webkit-appearance:none;text-align:center;
-  /* 防止 Safari 點擊時縮放 */
-  font-size:16px;
-  transform:scale(2);
-  transform-origin:center;
-  width:50%;
+  width:100%;
 }
 .f-input::placeholder{color:var(--green-light);opacity:.6}
 /* 隱藏數字輸入框的原生上下箭頭 */
@@ -452,7 +454,7 @@ function fillDefaults(){
   calcBmi();
 }
 
-// BMI 自動計算（需在 localStorage 設 'bl-height' 單位 cm）
+// BMI 自動計算
 function calcBmi(){
   const h=parseFloat(localStorage.getItem('bl-height')||'0');
   const w=parseFloat(document.getElementById('f-weight').value||'0');
@@ -471,7 +473,7 @@ function fmt(d){
 setInterval(()=>{document.getElementById('ts').textContent=fmt(new Date());},1000);
 document.getElementById('ts').textContent=fmt(new Date());
 
-// +/- 按鈕 + 長按連續
+// +/- 計算核心
 function adj(id,delta){
   const el=document.getElementById(id);
   const val=parseFloat(el.value)||0;
@@ -480,18 +482,36 @@ function adj(id,delta){
   el.value=next<0?'0':next.toFixed(dec);
   if(id==='f-weight') calcBmi();
 }
+
+// 完美的長按與觸控邏輯（防彈級）
 function setupBtn(mId,pId,fId,delta){
   let timer=null,iv=null;
-  function start(d){
+  function start(e, d){
+    if(e) e.preventDefault(); // 阻斷瀏覽器原生的 focus 穿透
+    document.getElementById(fId).blur(); // 收起可能開啟的鍵盤
     adj(fId,d);
-    timer=setTimeout(()=>{iv=setInterval(()=>adj(fId,d),80);},400);
+    if(!timer) timer=setTimeout(()=>{iv=setInterval(()=>adj(fId,d),80);},300);
   }
-  function stop(){clearTimeout(timer);clearInterval(iv);timer=null;iv=null;}
+  function stop(e){
+    clearTimeout(timer);clearInterval(iv);timer=null;iv=null;
+  }
+  
   const mb=document.getElementById(mId),pb=document.getElementById(pId);
-  mb.addEventListener('pointerdown',e=>{e.preventDefault();document.activeElement.blur();start(-delta);});
-  mb.addEventListener('pointerup',stop);mb.addEventListener('pointerleave',stop);mb.addEventListener('pointercancel',stop);
-  pb.addEventListener('pointerdown',e=>{e.preventDefault();document.activeElement.blur();start(delta);});
-  pb.addEventListener('pointerup',stop);pb.addEventListener('pointerleave',stop);pb.addEventListener('pointercancel',stop);
+  
+  // 監聽 pointerdown（相容觸控與滑鼠）
+  mb.addEventListener('pointerdown', e => start(e, -delta));
+  mb.addEventListener('pointerup', stop);
+  mb.addEventListener('pointerleave', stop);
+  mb.addEventListener('pointercancel', stop);
+  
+  pb.addEventListener('pointerdown', e => start(e, delta));
+  pb.addEventListener('pointerup', stop);
+  pb.addEventListener('pointerleave', stop);
+  pb.addEventListener('pointercancel', stop);
+
+  // 阻擋長按出現系統選單
+  mb.addEventListener('contextmenu', e => e.preventDefault());
+  pb.addEventListener('contextmenu', e => e.preventDefault());
 }
 
 window.addEventListener('DOMContentLoaded',()=>{

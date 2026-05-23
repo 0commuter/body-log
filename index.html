@@ -151,7 +151,7 @@ html,body{overflow-x:hidden;
 /* 數字 + 按鈕 */
 .f-input-row{display:flex;align-items:center;flex:1;gap:8px}
 .f-btn{
-  width:56px;height:54px;flex-shrink:0; /* 加寬確保手指盲點不會漏接 */
+  width:56px;height:54px;flex-shrink:0;
   border-radius:8px;
   border:1.5px solid var(--green-pale);background:transparent;
   color:var(--green-deep);font-size:22px;line-height:1;
@@ -160,7 +160,7 @@ html,body{overflow-x:hidden;
   -webkit-user-select:none;
   -webkit-touch-callout:none;
   user-select:none;
-  touch-action:none; /* 關鍵：完全阻斷瀏覽器的雙擊縮放與多餘判定，讓按鈕變為純粹的控制器 */
+  touch-action:none; 
 }
 .f-btn:active{background:var(--green-pale)}
 
@@ -168,13 +168,12 @@ html,body{overflow-x:hidden;
   margin:0;padding:0;
   background:transparent;border:none;outline:none;
   font-family:var(--font-num)!important;font-weight:400;
-  font-size:32px; /* 丟棄 scale 縮放，直接使用大字體，iOS 不會放大且熱區100%精準 */
+  font-size:32px; 
   color:var(--ink);flex:1;min-width:0;
   -webkit-appearance:none;text-align:center;
   width:100%;
 }
 .f-input::placeholder{color:var(--green-light);opacity:.6}
-/* 隱藏數字輸入框的原生上下箭頭 */
 .f-input::-webkit-inner-spin-button,
 .f-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .f-input[type=number]{-moz-appearance:textfield}
@@ -291,6 +290,12 @@ canvas{width:100%!important}
       autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="api-hint">在 Apps Script 執行 getToken() 後複製貼上</div>
   </div>
+  <!-- ★新增：身高設定欄位，用來自動計算 BMI★ -->
+  <div class="api-field">
+    <label>身高 (cm) - 用於自動計算 BMI</label>
+    <input type="number" id="inp-height" placeholder="例如：160" autocomplete="off" inputmode="decimal">
+    <div class="api-hint">儲存後，每次輸入體重都會自動幫你算好 BMI</div>
+  </div>
   <div class="api-panel-btns">
     <button class="api-save-btn" onclick="saveSettings()">儲 存</button>
     <button class="api-cancel-btn" onclick="togglePanel()">取 消</button>
@@ -361,7 +366,8 @@ canvas{width:100%!important}
           <div class="f-label"><span class="f-label-zh">基礎代謝</span><span class="f-label-unit">kcal</span><span class="f-label-en">BMR</span></div>
           <div class="f-input-row">
             <button class="f-btn" tabindex="-1" id="btn-bmr-m">−</button>
-            <input class="f-input" id="f-bmr" type="number" step="10" inputmode="numeric" placeholder="—">
+            <!-- ★修正：將 step 從 10 改為 1★ -->
+            <input class="f-input" id="f-bmr" type="number" step="1" inputmode="numeric" placeholder="—">
             <button class="f-btn" tabindex="-1" id="btn-bmr-p">+</button>
           </div>
         </div>
@@ -461,6 +467,10 @@ function calcBmi(){
   if(h>0&&w>0){
     document.getElementById('f-bmi').value=(w/((h/100)**2)).toFixed(1);
     document.getElementById('bmi-lbl').textContent='自動計算';
+  } else {
+    // 沒設定身高就清空，提醒使用者去設定
+    document.getElementById('f-bmi').value='';
+    document.getElementById('bmi-lbl').textContent='需設身高';
   }
 }
 document.getElementById('f-weight').addEventListener('input',calcBmi);
@@ -473,6 +483,15 @@ function fmt(d){
 setInterval(()=>{document.getElementById('ts').textContent=fmt(new Date());},1000);
 document.getElementById('ts').textContent=fmt(new Date());
 
+// ★新增：產生「本地時區」的 ISO 日期字串，解決 Google Sheet 時間倒退問題★
+function toLocalISO(d) {
+  const off = d.getTimezoneOffset();
+  const t = new Date(d.getTime() - off * 60000).toISOString().slice(0, -1);
+  const sign = off > 0 ? '-' : '+';
+  const pad = x => String(Math.abs(x)).padStart(2, '0');
+  return t + sign + pad(Math.floor(Math.abs(off) / 60)) + ':' + pad(off % 60);
+}
+
 // +/- 計算核心
 function adj(id,delta){
   const el=document.getElementById(id);
@@ -483,12 +502,12 @@ function adj(id,delta){
   if(id==='f-weight') calcBmi();
 }
 
-// 完美的長按與觸控邏輯（防彈級）
+// 防彈級按鈕觸控邏輯
 function setupBtn(mId,pId,fId,delta){
   let timer=null,iv=null;
   function start(e, d){
-    if(e) e.preventDefault(); // 阻斷瀏覽器原生的 focus 穿透
-    document.getElementById(fId).blur(); // 收起可能開啟的鍵盤
+    if(e) e.preventDefault(); 
+    document.getElementById(fId).blur(); 
     adj(fId,d);
     if(!timer) timer=setTimeout(()=>{iv=setInterval(()=>adj(fId,d),80);},300);
   }
@@ -497,8 +516,6 @@ function setupBtn(mId,pId,fId,delta){
   }
   
   const mb=document.getElementById(mId),pb=document.getElementById(pId);
-  
-  // 監聽 pointerdown（相容觸控與滑鼠）
   mb.addEventListener('pointerdown', e => start(e, -delta));
   mb.addEventListener('pointerup', stop);
   mb.addEventListener('pointerleave', stop);
@@ -509,7 +526,6 @@ function setupBtn(mId,pId,fId,delta){
   pb.addEventListener('pointerleave', stop);
   pb.addEventListener('pointercancel', stop);
 
-  // 阻擋長按出現系統選單
   mb.addEventListener('contextmenu', e => e.preventDefault());
   pb.addEventListener('contextmenu', e => e.preventDefault());
 }
@@ -520,7 +536,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   setupBtn('btn-visceral-m','btn-visceral-p','f-visceral',1);
   setupBtn('btn-muscle-m','btn-muscle-p','f-muscle',0.1);
   setupBtn('btn-age-m','btn-age-p','f-age',1);
-  setupBtn('btn-bmr-m','btn-bmr-p','f-bmr',10);
+  // ★修正：將 BMR 的 step 增幅從 10 改為 1★
+  setupBtn('btn-bmr-m','btn-bmr-p','f-bmr',1);
   setupBtn('btn-bmi-m','btn-bmi-p','f-bmi',0.1);
   fillDefaults();
   checkApi();
@@ -532,14 +549,24 @@ function togglePanel(){
   if(p.classList.toggle('open')){
     document.getElementById('inp-url').value=GAS_URL;
     document.getElementById('inp-token').value=GAS_TOKEN;
+    // 打開面板時帶出身高
+    document.getElementById('inp-height').value=localStorage.getItem('bl-height')||'';
   }
 }
 function saveSettings(){
   const url=document.getElementById('inp-url').value.trim();
   const token=document.getElementById('inp-token').value.trim();
+  const height=document.getElementById('inp-height').value.trim();
   if(!url||!token){toast('請填入網址和 Token',true);return;}
+  
   GAS_URL=url;GAS_TOKEN=token;
   localStorage.setItem(K_URL,url);localStorage.setItem(K_TOKEN,token);
+  
+  // 儲存身高並立即重新計算 BMI
+  if(height) localStorage.setItem('bl-height', height);
+  else localStorage.removeItem('bl-height');
+  calcBmi();
+  
   document.getElementById('api-panel').classList.remove('open');
   checkApi();
 }
@@ -599,8 +626,11 @@ async function save(){
   if(isBackfill){
     const dv=document.getElementById('bf-date').value;
     if(!dv){toast('請選擇補登日期',true);return;}
-    ts=new Date(dv+'T00:00:00').toISOString();
-  } else {ts=new Date().toISOString();}
+    // ★修正：改用 toLocalISO() 確保時區正確★
+    ts=toLocalISO(new Date(dv+'T00:00:00'));
+  } else {
+    ts=toLocalISO(new Date());
+  }
 
   const r={ts,
     weight:  +document.getElementById('f-weight').value  ||null,

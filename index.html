@@ -484,7 +484,7 @@ function calcBmi(){
   const w=parseFloat(document.getElementById('f-weight').value||'0');
   if(h>0&&w>0){
     document.getElementById('f-bmi').value=(w/((h/100)**2)).toFixed(1);
-    document.getElementById('bmi-lbl').textContent='自動計算';
+    document.getElementById('bmi-lbl').textContent='BMI';
   } else {
     // 沒設定身高就清空，提醒使用者去設定
     document.getElementById('f-bmi').value='';

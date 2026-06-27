@@ -471,7 +471,7 @@ let GAS_TOKEN=localStorage.getItem(K_TOKEN)||'';
 let recs=JSON.parse(localStorage.getItem(K_RECS)||'[]');
 let chart=null,cm='weight',cr=7;
 
-const DEFAULTS={weight:46,fat:25,visceral:2,muscle:30,age:30,bmr:1090};
+const DEFAULTS={weight:46,fat:23.5,visceral:2,muscle:30,age:29,bmr:1085};
 
 function fillDefaults(){
   Object.entries(DEFAULTS).forEach(([k,v])=>{ document.getElementById('f-'+k).value=v; });
